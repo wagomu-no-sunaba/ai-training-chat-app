@@ -15,6 +15,7 @@ Kiro-style Spec Driven Development implementation using claude code slash comman
 **Specs** (`.kiro/specs/`) - Formalize development process for individual features
 
 ### Active Specifications
+- `openrouter-chat-app`: Vercel AI SDK + OpenRouter によるチャットアプリケーション
 - Check `.kiro/specs/` for active specifications
 - Use `/kiro:spec-status [feature-name]` to check progress
 
