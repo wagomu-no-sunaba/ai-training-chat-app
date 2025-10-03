@@ -17,3 +17,13 @@ export interface ChatMessage {
 export interface ChatRequest {
   messages: ChatMessage[];
 }
+
+/**
+ * UIメッセージ型（useChatフック用）
+ */
+export interface Message {
+  id: string;
+  role: MessageRole;
+  content: string;
+  createdAt?: Date;
+}
