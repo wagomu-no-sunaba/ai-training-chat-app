@@ -9,7 +9,7 @@ import { MessageList } from "./MessageList";
 export function ChatUI() {
   const [inputValue, setInputValue] = useState("");
 
-  const { messages, sendMessage, status, error } = useChat();
+  const { messages, sendMessage, status, error, regenerate } = useChat();
 
   const isLoading = status === "streaming" || status === "submitted";
 
@@ -39,8 +39,19 @@ export function ChatUI() {
       {/* エラー表示 */}
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
-          <strong className="font-bold">エラーが発生しました: </strong>
-          <span className="block sm:inline">{error.message}</span>
+          <div className="flex items-center justify-between">
+            <div>
+              <strong className="font-bold">エラーが発生しました: </strong>
+              <span className="block sm:inline">{error.message}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => regenerate()}
+              className="ml-4 rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+            >
+              再試行
+            </button>
+          </div>
         </div>
       )}
 

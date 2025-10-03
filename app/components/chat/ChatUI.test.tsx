@@ -156,4 +156,50 @@ describe("ChatUI", () => {
     // デフォルト設定で呼ばれることを確認（引数なし）
     expect(mockUseChat).toHaveBeenCalled();
   });
+
+  it("エラー発生時に再試行ボタンを表示する", () => {
+    mockUseChat.mockReturnValue({
+      messages: [],
+      sendMessage: vi.fn(),
+      status: "error",
+      error: new Error("API Error"),
+      stop: vi.fn(),
+      regenerate: vi.fn(),
+      setMessages: vi.fn(),
+      resumeStream: vi.fn(),
+      addToolResult: vi.fn(),
+      clearError: vi.fn(),
+      id: "test-chat-id",
+    });
+
+    render(<ChatUI />);
+
+    expect(screen.getByRole("button", { name: /再試行/i })).toBeDefined();
+  });
+
+  it("再試行ボタンをクリックしたときにregenerateを呼び出す", async () => {
+    const user = userEvent.setup();
+    const mockRegenerate = vi.fn();
+
+    mockUseChat.mockReturnValue({
+      messages: [],
+      sendMessage: vi.fn(),
+      status: "error",
+      error: new Error("API Error"),
+      stop: vi.fn(),
+      regenerate: mockRegenerate,
+      setMessages: vi.fn(),
+      resumeStream: vi.fn(),
+      addToolResult: vi.fn(),
+      clearError: vi.fn(),
+      id: "test-chat-id",
+    });
+
+    render(<ChatUI />);
+
+    const retryButton = screen.getByRole("button", { name: /再試行/i });
+    await user.click(retryButton);
+
+    expect(mockRegenerate).toHaveBeenCalled();
+  });
 });
