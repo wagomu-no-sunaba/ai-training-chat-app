@@ -9,7 +9,8 @@ import { MessageList } from "./MessageList";
 export function ChatUI() {
   const [inputValue, setInputValue] = useState("");
 
-  const { messages, sendMessage, status, error, regenerate } = useChat();
+  const { messages, sendMessage, status, error, regenerate, setMessages } =
+    useChat();
 
   const isLoading = status === "streaming" || status === "submitted";
 
@@ -18,6 +19,11 @@ export function ChatUI() {
       sendMessage({ text: inputValue });
       setInputValue("");
     }
+  };
+
+  const handleClearChat = () => {
+    setMessages([]);
+    setInputValue("");
   };
 
   // messagesをMessage型に変換（partsからテキストを抽出）
@@ -62,12 +68,24 @@ export function ChatUI() {
 
       {/* 入力エリア */}
       <div className="border-t p-4">
-        <ChatInput
-          value={inputValue}
-          onChange={setInputValue}
-          onSubmit={handleSubmit}
-          disabled={isLoading}
-        />
+        <div className="flex gap-2">
+          <div className="flex-1">
+            <ChatInput
+              value={inputValue}
+              onChange={setInputValue}
+              onSubmit={handleSubmit}
+              disabled={isLoading}
+            />
+          </div>
+          <button
+            type="button"
+            onClick={handleClearChat}
+            disabled={messages.length === 0}
+            className="rounded bg-gray-500 px-4 py-2 text-white hover:bg-gray-600 disabled:bg-gray-300 disabled:cursor-not-allowed whitespace-nowrap self-end"
+          >
+            クリア
+          </button>
+        </div>
       </div>
     </div>
   );

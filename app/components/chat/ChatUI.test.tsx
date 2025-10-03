@@ -202,4 +202,92 @@ describe("ChatUI", () => {
 
     expect(mockRegenerate).toHaveBeenCalled();
   });
+
+  it("会話クリアボタンを表示する", () => {
+    const mockMessages = [
+      {
+        id: "1",
+        role: "user" as const,
+        parts: [{ type: "text" as const, text: "Hello" }],
+      },
+    ];
+
+    mockUseChat.mockReturnValue({
+      messages: mockMessages,
+      sendMessage: vi.fn(),
+      status: "ready",
+      error: undefined,
+      stop: vi.fn(),
+      regenerate: vi.fn(),
+      setMessages: vi.fn(),
+      resumeStream: vi.fn(),
+      addToolResult: vi.fn(),
+      clearError: vi.fn(),
+      id: "test-chat-id",
+    });
+
+    render(<ChatUI />);
+
+    expect(
+      screen.getByRole("button", { name: /クリア|消去|リセット/i }),
+    ).toBeDefined();
+  });
+
+  it("会話クリアボタンをクリックしたときにsetMessagesを空配列で呼び出す", async () => {
+    const user = userEvent.setup();
+    const mockSetMessages = vi.fn();
+    const mockMessages = [
+      {
+        id: "1",
+        role: "user" as const,
+        parts: [{ type: "text" as const, text: "Hello" }],
+      },
+    ];
+
+    mockUseChat.mockReturnValue({
+      messages: mockMessages,
+      sendMessage: vi.fn(),
+      status: "ready",
+      error: undefined,
+      stop: vi.fn(),
+      regenerate: vi.fn(),
+      setMessages: mockSetMessages,
+      resumeStream: vi.fn(),
+      addToolResult: vi.fn(),
+      clearError: vi.fn(),
+      id: "test-chat-id",
+    });
+
+    render(<ChatUI />);
+
+    const clearButton = screen.getByRole("button", {
+      name: /クリア|消去|リセット/i,
+    });
+    await user.click(clearButton);
+
+    expect(mockSetMessages).toHaveBeenCalledWith([]);
+  });
+
+  it("メッセージが空のときは会話クリアボタンを無効化する", () => {
+    mockUseChat.mockReturnValue({
+      messages: [],
+      sendMessage: vi.fn(),
+      status: "ready",
+      error: undefined,
+      stop: vi.fn(),
+      regenerate: vi.fn(),
+      setMessages: vi.fn(),
+      resumeStream: vi.fn(),
+      addToolResult: vi.fn(),
+      clearError: vi.fn(),
+      id: "test-chat-id",
+    });
+
+    render(<ChatUI />);
+
+    const clearButton = screen.getByRole("button", {
+      name: /クリア|消去|リセット/i,
+    }) as HTMLButtonElement;
+    expect(clearButton.disabled).toBe(true);
+  });
 });
