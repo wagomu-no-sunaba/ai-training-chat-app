@@ -2,8 +2,10 @@
 
 import { useChat } from "@ai-sdk/react";
 import { useState } from "react";
+import { getErrorMessage } from "@/app/lib/errorHelpers";
 import type { Message } from "@/app/types/chat";
 import { ChatInput } from "./ChatInput";
+import { ErrorMessage } from "./ErrorMessage";
 import { MessageList } from "./MessageList";
 
 export function ChatUI() {
@@ -40,25 +42,21 @@ export function ChatUI() {
     };
   });
 
+  const errorInfo = error ? getErrorMessage(error) : null;
+
   return (
     <div className="flex h-screen flex-col">
       {/* エラー表示 */}
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
-          <div className="flex items-center justify-between">
-            <div>
-              <strong className="font-bold">エラーが発生しました: </strong>
-              <span className="block sm:inline">{error.message}</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => regenerate()}
-              className="ml-4 rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700"
-            >
-              再試行
-            </button>
-          </div>
-        </div>
+      {error && errorInfo && (
+        <ErrorMessage
+          title={errorInfo.title}
+          message={errorInfo.message}
+          actionText={errorInfo.actionText}
+          onRetry={() => regenerate()}
+          onDismiss={() => {
+            /* エラーは再試行で自動クリアされる */
+          }}
+        />
       )}
 
       {/* メッセージリスト */}

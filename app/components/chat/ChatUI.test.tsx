@@ -147,7 +147,9 @@ describe("ChatUI", () => {
 
     render(<ChatUI />);
 
-    expect(screen.getByText(/エラーが発生しました/i)).toBeDefined();
+    // ErrorMessageコンポーネントが表示され、エラータイトルとメッセージが表示される
+    expect(screen.getByText(/エラー/)).toBeDefined();
+    expect(screen.getByText("API Error")).toBeDefined();
   });
 
   it("引数なしでuseChatを初期化する（デフォルトで/api/chatを使用）", () => {
