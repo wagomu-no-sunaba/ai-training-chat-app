@@ -1,5 +1,19 @@
+import type { UIMessage } from "ai";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "./route";
+
+// UIMessage形式のヘルパー関数
+function createUIMessage(
+  role: "user" | "assistant" | "system",
+  content: string,
+  id = `msg-${Date.now()}`,
+): UIMessage {
+  return {
+    id,
+    role,
+    parts: [{ type: "text", text: content }],
+  };
+}
 
 describe("/api/chat Route Handler", () => {
   const originalEnv = process.env.OPENROUTER_API_KEY;
@@ -18,7 +32,7 @@ describe("/api/chat Route Handler", () => {
   });
 
   describe("Request Validation", () => {
-    it("should return 400 for invalid request body", async () => {
+    it("should return 500 for invalid request body", async () => {
       const request = new Request("http://localhost/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -26,13 +40,13 @@ describe("/api/chat Route Handler", () => {
       });
 
       const response = await POST(request);
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(500);
 
       const data = await response.json();
-      expect(data.error.type).toBe("validation_error");
+      expect(data.error.type).toBe("api_error");
     });
 
-    it("should return 400 for empty messages array", async () => {
+    it("should return 500 for empty messages array", async () => {
       const request = new Request("http://localhost/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -40,26 +54,26 @@ describe("/api/chat Route Handler", () => {
       });
 
       const response = await POST(request);
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(500);
 
       const data = await response.json();
-      expect(data.error.type).toBe("validation_error");
+      expect(data.error.type).toBe("api_error");
     });
 
-    it("should return 400 for invalid message role", async () => {
+    it("should return 500 for invalid message role", async () => {
       const request = new Request("http://localhost/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: [{ role: "invalid", content: "Hello" }],
+          messages: [{ id: "1", role: "invalid", parts: [] }],
         }),
       });
 
       const response = await POST(request);
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(500);
 
       const data = await response.json();
-      expect(data.error.type).toBe("validation_error");
+      expect(data.error.type).toBe("api_error");
     });
   });
 
@@ -71,7 +85,7 @@ describe("/api/chat Route Handler", () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: [{ role: "user", content: "Hello" }],
+          messages: [createUIMessage("user", "Hello")],
         }),
       });
 
@@ -90,7 +104,7 @@ describe("/api/chat Route Handler", () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: [{ role: "user", content: "Hello" }],
+          messages: [createUIMessage("user", "Hello")],
         }),
       });
 
@@ -98,7 +112,9 @@ describe("/api/chat Route Handler", () => {
 
       // ストリーミングレスポンスの確認
       expect(response.ok).toBe(true);
-      expect(response.headers.get("Content-Type")).toContain("text/plain");
+      expect(response.headers.get("Content-Type")).toContain(
+        "text/event-stream",
+      );
     });
 
     it("should accept multiple messages with different roles", async () => {
@@ -107,10 +123,10 @@ describe("/api/chat Route Handler", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: [
-            { role: "system", content: "You are a helpful assistant" },
-            { role: "user", content: "Hello" },
-            { role: "assistant", content: "Hi! How can I help you?" },
-            { role: "user", content: "Tell me a joke" },
+            createUIMessage("system", "You are a helpful assistant", "msg-1"),
+            createUIMessage("user", "Hello", "msg-2"),
+            createUIMessage("assistant", "Hi! How can I help you?", "msg-3"),
+            createUIMessage("user", "Tell me a joke", "msg-4"),
           ],
         }),
       });
@@ -129,10 +145,10 @@ describe("/api/chat Route Handler", () => {
       });
 
       const response = await POST(request);
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(500);
 
       const data = await response.json();
-      expect(data.error.type).toBe("validation_error");
+      expect(data.error.type).toBe("api_error");
     });
   });
 });

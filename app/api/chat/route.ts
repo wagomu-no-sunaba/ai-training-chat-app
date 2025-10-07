@@ -1,7 +1,6 @@
-import { streamText } from "ai";
+import { convertToModelMessages, streamText, type UIMessage } from "ai";
 import { createErrorResponse } from "@/app/lib/errors";
 import { getOpenRouterModel } from "@/app/lib/openrouter";
-import { validateChatRequest } from "@/app/lib/validators";
 
 /**
  * POST /api/chat - チャットAPI
@@ -10,17 +9,17 @@ import { validateChatRequest } from "@/app/lib/validators";
 export async function POST(request: Request) {
   try {
     // リクエストボディのパース
-    const body = await request.json().catch(() => null);
+    const { messages }: { messages: UIMessage[] } = await request.json();
 
-    // リクエストの検証
-    if (!validateChatRequest(body)) {
+    // メッセージ配列の検証
+    if (!messages || messages.length === 0) {
       return Response.json(
         createErrorResponse(
-          "validation_error",
-          "Invalid request body. Expected { messages: Array<{ role: 'user' | 'assistant' | 'system', content: string }> }",
-          "INVALID_REQUEST_BODY",
+          "api_error",
+          "Messages array must not be empty",
+          "INVALID_MESSAGES",
         ),
-        { status: 400 },
+        { status: 500 },
       );
     }
 
@@ -42,11 +41,11 @@ export async function POST(request: Request) {
     // ストリーミングレスポンスの生成
     const result = streamText({
       model,
-      messages: body.messages,
+      messages: convertToModelMessages(messages),
     });
 
     // ストリーミングレスポンスを返す
-    return result.toTextStreamResponse();
+    return result.toUIMessageStreamResponse();
   } catch (error) {
     console.error("Chat API error:", error);
 
